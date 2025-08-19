@@ -1,0 +1,37 @@
+// Typography
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lacquer&display=swap');
+
+:root {
+    --display-font: 'Lacquer', cursive;
+    --body-font: 'Outfit', sans-serif;
+}
+
+:root {
+    // Core Colors
+    --accent-1: #edbf4b;
+    --accent-1-dark: #d6a03c;
+    --accent-2: #b0ded3;
+    --accent-2-dark: #8abfb0;
+    --accent-3: #f26340;
+    --accent-3-dark: #d24c2b;
+    --accent-4: #276e6b;
+    --accent-4-dark: #1f5653;
+    --accent-5: #f2b8d4;
+    --accent-5-dark: #d48ca0;
+    --background: #fcfbfc;
+    --surface: #f8f7f1;
+    --surface-dark: #e2e2e2;
+    --surface-inverted: #2b2b2b;
+    --body: #201c1e;
+    --body-dark: #0a0a0a;
+    --border: rgba(0, 24, 46, 0.2); // For semi-transparent text
+    --overlay: rgba(0, 0, 0, 0.05); // For overlays, modals, or dark backgrounds
+    --transparent: rgba(0, 0, 0, 0); // For transparent backgrounds
+
+    // Shadows
+    --shadow-sm: rgba(0, 0, 0, 0.1) 0px 1px 3px;
+    --shadow-md: rgba(0, 0, 0, 0.1) 0px 2px 12px;
+    --shadow-lg: rgba(0, 0, 0, 0.4) 0px 10px 15px;
+    --shadow-text: rgba(0, 0, 0, 0.4) 2px 2px 2px;
+}
