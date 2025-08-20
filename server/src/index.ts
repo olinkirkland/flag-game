@@ -1,40 +1,30 @@
 import dotenv from 'dotenv';
-import Redis from 'ioredis';
-import joinRouter, { setRedis } from './routes/join';
+import sql from './database/db';
+import userRouter from './routes/users';
 import { createServer } from './server';
 
 async function main() {
-    console.log('Loading environment variables...');
     dotenv.config();
 
-    console.log('Reading Redis configuration...');
-    const redisUrl = process.env.REDIS_URL;
-    const redisPassword = process.env.REDIS_PASSWORD;
-    if (!redisUrl || !redisPassword) {
-        throw new Error(
-            'Missing REDIS_URL or REDIS_PASSWORD in environment variables'
+    // Ensure the user table exists
+    // { id, created_at, user_id }
+    try {
+        await sql`
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(255) UNIQUE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+    `;
+    } catch (error) {
+        console.error('Error creating users table:', error);
+        throw error;
     }
 
-    console.log('Connecting to Redis...');
-    const redis = new Redis(redisUrl, { password: redisPassword });
-
-    // Wait for Redis to be ready before starting the server
-    await new Promise((resolve, reject) => {
-        redis.once('ready', () => {
-            console.log('Redis connected successfully');
-            resolve(null);
-        });
-        redis.once('error', (err: unknown) => {
-            console.error('Redis connection error:', err);
-            reject(err);
-        });
-    });
-
     // Create and start the Express server
-    const app = createServer(redis);
+    const app = createServer();
 
-    app.use('/api/join', setRedis(redis), joinRouter);
+    app.use('/api/user', userRouter);
 
     const PORT = process.env.PORT || 3001;
     app.listen(PORT, () => {
