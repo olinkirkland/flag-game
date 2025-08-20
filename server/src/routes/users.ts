@@ -1,20 +1,25 @@
-import { v4 as uuid } from 'uuid';
-import { getUserById } from '@/database/users';
+import { createUser, getAllUsers, getUserById } from '@/database/users';
 import { Request, Response, Router } from 'express';
 import StatusCode from 'status-code-enum';
 
 const router = Router();
 
 router.get('/', async (req: Request, res: Response) => {
-    // TODO: Get all users from the database
+    try {
+        const users = await getAllUsers();
+        res.status(StatusCode.SuccessOK).json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(StatusCode.ServerErrorInternal).json({
+            error: 'Failed to fetch users'
+        });
+    }
 });
 
 router.post('/', async (req: Request, res: Response) => {
-    // Create a new user in the database
-    const userId = uuid();
     try {
-        const newUser = await getUserById(userId);
-        res.status(StatusCode.SuccessCreated).json(newUser);
+        const user = createUser();
+        res.status(StatusCode.SuccessCreated).json(user);
     } catch (error) {
         console.error('Error creating user:', error);
         res.status(StatusCode.ServerErrorInternal).json({
@@ -24,7 +29,6 @@ router.post('/', async (req: Request, res: Response) => {
 });
 
 router.get('/:id', async (req: Request, res: Response) => {
-    // Fetch an existing user from the database or create a new one
     const userId = req.params.id;
     try {
         const user = await getUserById(userId);
