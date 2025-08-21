@@ -6,7 +6,7 @@
     "type": "commonjs",
     "scripts": {
         "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/index.ts",
-        "build": "tsc",
+        "build": "tsc && tsc-alias",
         "start": "node -r tsconfig-paths/register dist/index.js"
     },
     "author": "Olin Kirkland",
@@ -26,6 +26,7 @@
         "typescript": "^5.8.3"
     },
     "dependencies": {
+        "tsc-alias": "^1.8.16",
         "cors": "^2.8.5",
         "dotenv": "^16.5.0",
         "express": "^5.1.0",
