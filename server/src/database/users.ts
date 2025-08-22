@@ -10,7 +10,28 @@ export async function createUser() {
         RETURNING id, user_id, created_at;
     `;
     if (result.length === 0) throw new Error('Failed to create user');
-    return result[0];
+    return {
+        id: result[0].user_id,
+        name: result[0].user_id, // Assuming user_id is used as the name for simplicity
+        createdAt: result[0].created_at
+    };
+}
+
+export async function changeNameById(id: string, newName: string) {
+    // Change the name of an existing user
+    const result = await sql`
+        UPDATE users
+        SET user_id = ${newName}
+        WHERE user_id = ${id}
+        RETURNING id, user_id, created_at;
+    `;
+    if (result.length === 0)
+        throw new Error('User not found or name not changed');
+    return {
+        id: result[0].user_id,
+        name: result[0].user_id, // Assuming user_id is used as the name for simplicity
+        createdAt: result[0].created_at
+    };
 }
 
 export async function getUserById(id: string) {
@@ -38,6 +59,18 @@ export async function getAllUsers() {
         name: user.user_id, // Assuming user_id is used as the name for simplicity
         createdAt: user.created_at
     }));
+}
+
+export async function deleteUserById(id: string) {
+    // Delete a user by ID
+    const result = await sql`
+        DELETE FROM users WHERE user_id = ${id} RETURNING id;
+    `;
+    if (result.length === 0) throw new Error('User not found');
+    return {
+        id: result[0].id,
+        message: 'User deleted successfully'
+    };
 }
 
 export async function deleteAllUsers() {

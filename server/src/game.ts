@@ -67,26 +67,23 @@ export async function startSetupPhase() {
     gameState.currentCountry = country;
     gameState.secondsRemainingInPhase = 5;
     console.log('👉', 'Setup phase: Players can prepare for the round.');
-    console.log(`Current country: ${country}`);
-    console.log(`Available colors: ${colors.join(', ')}`);
-    console.log(`Players: ${playerIds.join(', ')}`);
+    console.log('  ', `Current country: ${country}`);
+    console.log('  ', `Available colors: ${colors.join(', ')}`);
+    console.log('  ', `Players: ${playerIds.join(', ')}`);
 }
 
 function startPlayPhase() {
     // Change the game state to the play phase
     gameState.currentPhase = Phase.PLAY;
     gameState.secondsRemainingInPhase = 10;
-    console.log('👉', 'Play phase: Players can now submit their guesses.');
+    console.log('👉', 'Play phase: Players can submit their guesses.');
 }
 
 function startResultsPhase() {
     // Change the game state to the results phase
     gameState.currentPhase = Phase.RESULTS;
     gameState.secondsRemainingInPhase = 5;
-    console.log(
-        '👉',
-        'Results phase: Players can see the results of the round.'
-    );
+    console.log('👉', 'Results phase: Players see the results of the round.');
 }
 
 async function getConnectedPlayerIds() {

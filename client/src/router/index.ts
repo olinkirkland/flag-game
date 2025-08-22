@@ -1,9 +1,9 @@
+import LoadingModal from '@/components/modals/templates/LoadingModal.vue';
 import { getUserId, setUserId } from '@/controllers/data-controller';
+import ModalController from '@/controllers/modal-controller';
 import axios from 'axios';
 import { type RouterOptions, createRouter, createWebHistory } from 'vue-router';
 import PlayPage from '../pages/PlayPage.vue';
-import ModalController from '@/controllers/modal-controller';
-import LoadingModal from '@/components/modals/templates/LoadingModal.vue';
 
 export const PageName = {
     PLAY: 'play'
@@ -46,6 +46,8 @@ router.beforeEach(async (to, from, next) => {
         name: string;
         createdAt: string;
     };
+
+    console.log(response.data);
 
     setUserId(user.id);
 

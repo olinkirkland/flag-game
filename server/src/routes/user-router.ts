@@ -1,6 +1,8 @@
 import {
+    changeNameById,
     createUser,
     deleteAllUsers,
+    deleteUserById,
     getAllUsers,
     getUserById
 } from '@/database/users';
@@ -46,7 +48,21 @@ router.get('/:id', async (req: Request, res: Response) => {
     }
 });
 
-router.delete('/', async (req: Request, res: Response) => {
+router.put('/:id', async (req: Request, res: Response) => {
+    const userId = req.params.id;
+    const newName = req.body.name;
+    try {
+        const updatedUser = await changeNameById(userId, newName);
+        res.status(StatusCode.SuccessOK).json(updatedUser);
+    } catch (error) {
+        console.error('Error updating user name:', error);
+        res.status(StatusCode.ServerErrorInternal).json({
+            error: 'Failed to update user name'
+        });
+    }
+});
+
+router.delete('/clear', async (req: Request, res: Response) => {
     try {
         await deleteAllUsers();
         res.status(StatusCode.SuccessNoContent).send();
@@ -55,6 +71,19 @@ router.delete('/', async (req: Request, res: Response) => {
         console.error('Error deleting users:', error);
         res.status(StatusCode.ServerErrorInternal).json({
             error: 'Failed to delete users'
+        });
+    }
+});
+
+router.delete('/:id', async (req: Request, res: Response) => {
+    const userId = req.params.id;
+    try {
+        await deleteUserById(userId);
+        res.status(StatusCode.SuccessNoContent).send();
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(StatusCode.ServerErrorInternal).json({
+            error: 'Failed to delete user'
         });
     }
 });

@@ -11,7 +11,7 @@ import axios from 'axios';
 
 function onClickDeleteAllUsers() {
     axios
-        .delete('user')
+        .delete('user/clear')
         .then(() => {
             console.log('All users deleted successfully');
         })

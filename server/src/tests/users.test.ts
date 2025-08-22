@@ -17,10 +17,10 @@ describe.skip('User database functions', () => {
 
     it('should get a user by user_id', async () => {
         const created = await createUser();
-        const fetched = await getUserById(created.user_id);
+        const fetched = await getUserById(created.name);
         expect(fetched).toMatchObject({
             id: created.id,
-            user_id: created.user_id
+            name: created.name
         });
     });
 
