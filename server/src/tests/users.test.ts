@@ -55,7 +55,6 @@ describe('User API routes', () => {
     });
 
     it('GET /api/user/:id should return a user if exists', async () => {
-        // First, create a user
         const createRes = await request(app).post('/api/user');
         const userId = createRes.body.user_id;
         const res = await request(app).get(`/api/user/${userId}`);

@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import sql from './database/db';
-import userRouter from './routes/users';
+import { startGameLoop } from './game';
 import { createServer } from './server';
 
 async function main() {
@@ -22,6 +22,8 @@ async function main() {
     }
 
     const app = createServer();
+
+    startGameLoop();
 }
 
 main().catch((err) => {
