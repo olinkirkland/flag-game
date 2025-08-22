@@ -47,12 +47,11 @@ router.beforeEach(async (to, from, next) => {
         createdAt: string;
     };
 
-    console.log(response.data);
-
     setUserId(user.id);
+    // TODO: Connect to the websocket server
+    // await connectWebSocket(user.id);
 
     console.log('Navigating to:', to.name);
-
     ModalController.close();
     next();
 });
