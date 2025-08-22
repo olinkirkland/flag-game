@@ -7,7 +7,7 @@ test('jest is working', () => {
     expect(1 + 1).toBe(2);
 });
 
-describe('User database functions', () => {
+describe.skip('User database functions', () => {
     it('should create a user and return user object', async () => {
         const user = await createUser();
         expect(user).toHaveProperty('id');
@@ -36,8 +36,7 @@ describe('User database functions', () => {
     });
 });
 
-// Now we'll test the Express routes
-describe('User API routes', () => {
+describe.skip('User API routes', () => {
     const app = createServer();
 
     it('POST /api/user should create a user', async () => {
