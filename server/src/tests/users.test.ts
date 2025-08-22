@@ -3,7 +3,7 @@ import { createServer } from '@/server';
 import { createUser, getUserById, getAllUsers } from '@/database/users';
 import StatusCode from 'status-code-enum';
 
-test('jest is working', () => {
+test('users.test.ts: jest is working', () => {
     expect(1 + 1).toBe(2);
 });
 

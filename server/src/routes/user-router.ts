@@ -1,4 +1,9 @@
-import { createUser, getAllUsers, getUserById } from '@/database/users';
+import {
+    createUser,
+    deleteAllUsers,
+    getAllUsers,
+    getUserById
+} from '@/database/users';
 import { Request, Response, Router } from 'express';
 import StatusCode from 'status-code-enum';
 
@@ -37,6 +42,19 @@ router.get('/:id', async (req: Request, res: Response) => {
         console.error('Error fetching user:', error);
         res.status(StatusCode.ServerErrorInternal).json({
             error: 'Failed to fetch user'
+        });
+    }
+});
+
+router.delete('/', async (req: Request, res: Response) => {
+    try {
+        await deleteAllUsers();
+        res.status(StatusCode.SuccessNoContent).send();
+        console.log('All users deleted successfully');
+    } catch (error) {
+        console.error('Error deleting users:', error);
+        res.status(StatusCode.ServerErrorInternal).json({
+            error: 'Failed to delete users'
         });
     }
 });
