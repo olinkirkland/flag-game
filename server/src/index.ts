@@ -21,15 +21,7 @@ async function main() {
         throw error;
     }
 
-    // Create and start the Express server
     const app = createServer();
-
-    app.use('/api/user', userRouter);
-
-    const PORT = process.env.PORT || 3001;
-    app.listen(PORT, () => {
-        console.log(`Server listening on port ${PORT}`);
-    });
 }
 
 main().catch((err) => {
