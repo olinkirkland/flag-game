@@ -9,6 +9,7 @@ const router = Router();
  */
 router.get('/', async (req: Request, res: Response) => {
     try {
+        console.log(gameState);
         res.status(StatusCode.SuccessOK).json(gameState);
     } catch (error) {
         console.error('Error fetching game state:', error);

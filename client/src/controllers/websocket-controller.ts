@@ -1,66 +1,93 @@
+import LoadingModal from '@/components/modals/templates/LoadingModal.vue';
+import { useGameStateStore } from '@/store/game-state-store';
+import { applyPatch } from 'fast-json-patch';
+import ModalController from './modal-controller';
 
-import { Subject } from 'rxjs';
+let socket: WebSocket;
+let address: string;
 
-export interface WebSocketDispatch {
-    type: string;
-    payload?: any;
-    rawEvent?: MessageEvent;
+export type SocketMessageType = 'patch';
+
+export interface SocketMessage {
+    type: SocketMessageType;
+    data?: any;
 }
 
-export default class WebSocketController {
-    private static instance: WebSocketController | null = null;
-    private subject: Subject<WebSocketDispatch> = new Subject<WebSocketDispatch>();
-    private ws: WebSocket | null = null;
+// The message that is sent over the socket
+export interface SocketMessage {
+    type: SocketMessageType;
+    data?: any;
+}
 
-    private constructor() {}
+export function isSocketOpen() {
+    return socket && socket.readyState === WebSocket.OPEN;
+}
 
-    public static getInstance(): WebSocketController {
-        return this.instance || (this.instance = new this());
+export async function connectToSocket() {
+    destroyConnection();
+
+    // Is 'localhost' in the hostname?
+    const isLocalhost = window.location.hostname.includes('localhost');
+    const address = isLocalhost
+        ? 'ws://localhost:3002'
+        : 'ws://flag-game-production.up.railway.app:3002';
+
+    try {
+        socket = new WebSocket(address);
+    } catch (error) {
+        return false;
     }
 
-    public connect(url: string): Promise<WebSocket> {
-        return new Promise((resolve, reject) => {
-            this.ws = new WebSocket(url);
-            this.ws.onopen = () => {
-                resolve(this.ws!);
+    return new Promise((resolve) => {
+        socket.onopen = () => {
+            socket.onopen = onOpen;
+            socket.onclose = onClose;
+            socket.onmessage = onMessage;
+            socket.onerror = () => {
+                resolve(false);
             };
-            this.ws.onerror = (error) => {
-                reject(error);
-            };
-            this.ws.onmessage = (event) => {
-                let data: any;
-                try {
-                    data = JSON.parse(event.data);
-                } catch {
-                    data = event.data;
-                }
-                this.dispatch({ type: 'message', payload: data, rawEvent: event });
-            };
-            this.ws.onclose = (event) => {
-                this.dispatch({ type: 'close', payload: event });
-            };
-        });
-    }
 
-    private dispatch(d: WebSocketDispatch): void {
-        this.subject.next(d);
-    }
+            console.log('Connected to socket server');
+            resolve(true);
+        };
+    });
+}
 
-    public addEventListener(callback: (d: WebSocketDispatch) => void): void {
-        this.subject.subscribe(callback);
-    }
+async function onMessage(message: any) {
+    if (!message.data) return;
 
-    public removeEventListener(): void {
-        this.subject.unsubscribe();
-    }
+    try {
+        const data = JSON.parse(message.data);
+        const socketMessage = data as SocketMessage;
+        console.log('Applying patch:', socketMessage.data);
+        useGameStateStore().model = applyPatch(useGameStateStore().model, [
+            socketMessage.data
+        ]).newDocument;
 
-    public send(data: any): void {
-        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-            this.ws.send(typeof data === 'string' ? data : JSON.stringify(data));
-        }
+        console.log(
+            JSON.stringify(useGameStateStore().model.secondsRemainingInPhase)
+        );
+    } catch (error) {
+        console.error('Error parsing socket message:', error);
     }
+}
 
-    public close(): void {
-        this.ws?.close();
-    }
+function onOpen() {}
+
+function onClose() {
+    setTimeout(() => {
+        ModalController.open(LoadingModal);
+    }, 1000);
+}
+
+export async function destroyConnection() {
+    if (!socket) return;
+    if (socket.readyState === WebSocket.OPEN) socket.close();
+
+    onClose();
+
+    socket.onclose = null;
+    socket.onmessage = null;
+    socket.onerror = null;
+    socket.onopen = null;
 }

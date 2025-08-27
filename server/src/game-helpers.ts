@@ -5,7 +5,7 @@ export function getRandomCountry() {
 
 export function getColorsForCountry(country: string): string[] {
     // TODO: Implement logic to get colors for the given country
-    return ['0xFF0000', '0xFFFFFF', '0x0000FF'];
+    return ['0xff0000', '0x00ff00', '0x0000ff'];
 }
 
 /**
@@ -20,12 +20,16 @@ export function getRandomColors(
 ): string[] {
     // TODO: Implement logic to get random colors excluding the specified colors
     const allColors = [
-        '0xFF0000',
-        '0x00FF00',
-        '0x0000FF',
-        '0xFFFF00',
-        '0xFFFFFF',
-        '0x000000'
+        '#ff0000',
+        '#00ff00',
+        '#0000ff',
+        '#ffff00',
+        '#ffffff',
+        '#000000',
+        '#ff00ff',
+        '#00ffff',
+        '#ffa500',
+        '#800080'
     ]; // Example color list, should be replaced with complete list of unique colors across all countries
 
     // Filter out used colors

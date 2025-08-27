@@ -1,8 +1,11 @@
+import GameState from '@shared/game-state-model';
+import { applyPatch, Operation } from 'fast-json-patch';
 import {
     getColorsForCountry,
     getRandomColors,
     getRandomCountry
 } from './game-helpers';
+import SocketServer from './socket-server';
 
 let gameLoopInterval: NodeJS.Timeout | null = null;
 
@@ -12,17 +15,7 @@ export const Phase = {
     RESULTS: 'results'
 };
 
-type GameState = {
-    round: number;
-    players: string[];
-    artist: string | null; // The player who is currently the artist
-    currentCountry: string | null;
-    currentColors: string[];
-    currentPhase: string;
-    secondsRemainingInPhase: number;
-};
-
-export const gameState: GameState = {
+export let gameState: GameState = {
     round: 1,
     players: [],
     artist: null, // Initially no artist
@@ -31,6 +24,17 @@ export const gameState: GameState = {
     currentPhase: Phase.SETUP,
     secondsRemainingInPhase: 0
 };
+
+export function patch(patch: Operation) {
+    // Apply to server-side game state
+    gameState = applyPatch(gameState, [patch]).newDocument;
+
+    // Broadcast to all connected clients
+    SocketServer.getInstance().broadcast({
+        type: 'patch',
+        data: patch
+    });
+}
 
 /**
  * Start the game loop that manages the game phases.
@@ -42,11 +46,19 @@ export function startGameLoop() {
 
     startSetupPhase(); // Start the game with the setup phase
 
+    const intervalMillis = 1000;
     gameLoopInterval = setInterval(() => {
-        if (gameState.secondsRemainingInPhase > 0)
-            gameState.secondsRemainingInPhase--;
-        else advancePhase();
-    }, 1000);
+        if (gameState.secondsRemainingInPhase > 0) {
+
+            const newSecondsRemainingInPhase =
+                gameState.secondsRemainingInPhase - intervalMillis / 1000;
+            patch({
+                op: 'replace',
+                path: '/secondsRemainingInPhase',
+                value: Number(newSecondsRemainingInPhase.toFixed(3))
+            });
+        } else advancePhase();
+    }, intervalMillis);
 }
 
 export async function startSetupPhase() {
@@ -59,13 +71,43 @@ export async function startSetupPhase() {
     const colors = getRandomColors(countryColors);
 
     // 3. Change the game state for the round
-    gameState.round++;
-    gameState.currentPhase = Phase.SETUP;
-    gameState.players = playerIds;
-    gameState.artist = playerIds[Math.floor(Math.random() * playerIds.length)];
-    gameState.currentColors = colors;
-    gameState.currentCountry = country;
-    gameState.secondsRemainingInPhase = 5;
+    patch({
+        op: 'replace',
+        path: '/secondsRemainingInPhase',
+        value: 5
+    });
+
+    patch({
+        op: 'replace',
+        path: '/round',
+        value: gameState.round + 1
+    });
+    patch({
+        op: 'replace',
+        path: '/currentPhase',
+        value: Phase.SETUP
+    });
+    patch({
+        op: 'replace',
+        path: '/players',
+        value: playerIds
+    });
+    patch({
+        op: 'replace',
+        path: '/artist',
+        value: playerIds[Math.floor(Math.random() * playerIds.length)]
+    });
+    patch({
+        op: 'replace',
+        path: '/currentColors',
+        value: colors
+    });
+    patch({
+        op: 'replace',
+        path: '/currentCountry',
+        value: country
+    });
+
     console.log('👉', 'Setup phase: Players can prepare for the round.');
     console.log('  ', `Current country: ${country}`);
     console.log('  ', `Available colors: ${colors.join(', ')}`);
@@ -74,15 +116,33 @@ export async function startSetupPhase() {
 
 function startPlayPhase() {
     // Change the game state to the play phase
-    gameState.currentPhase = Phase.PLAY;
-    gameState.secondsRemainingInPhase = 10;
+    patch({
+        op: 'replace',
+        path: '/currentPhase',
+        value: Phase.PLAY
+    });
+    patch({
+        op: 'replace',
+        path: '/secondsRemainingInPhase',
+        value: 10
+    });
+
     console.log('👉', 'Play phase: Players can submit their guesses.');
 }
 
 function startResultsPhase() {
     // Change the game state to the results phase
-    gameState.currentPhase = Phase.RESULTS;
-    gameState.secondsRemainingInPhase = 5;
+    patch({
+        op: 'replace',
+        path: '/currentPhase',
+        value: Phase.RESULTS
+    });
+    patch({
+        op: 'replace',
+        path: '/secondsRemainingInPhase',
+        value: 5
+    });
+
     console.log('👉', 'Results phase: Players see the results of the round.');
 }
 

@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import sql from './database/db';
 import { startGameLoop } from './game';
 import { createServer } from './server';
+import SocketServer from './socket-server';
 
 async function main() {
     dotenv.config();
@@ -22,6 +23,7 @@ async function main() {
     }
 
     const app = createServer();
+    await SocketServer.getInstance().start();
 
     startGameLoop();
 }

@@ -4,6 +4,8 @@ import ModalController from '@/controllers/modal-controller';
 import axios from 'axios';
 import { type RouterOptions, createRouter, createWebHistory } from 'vue-router';
 import PlayPage from '../pages/PlayPage.vue';
+import { connectToSocket } from '@/controllers/websocket-controller';
+import { useGameStateStore } from '@/store/game-state-store';
 
 export const PageName = {
     PLAY: 'play'
@@ -48,8 +50,9 @@ router.beforeEach(async (to, from, next) => {
     };
 
     setUserId(user.id);
-    // TODO: Connect to the websocket server
-    // await connectWebSocket(user.id);
+    await useGameStateStore().fetchGameState();
+
+    await connectToSocket();
 
     console.log('Navigating to:', to.name);
     ModalController.close();
