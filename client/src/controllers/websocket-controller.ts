@@ -1,10 +1,20 @@
+/**
+ * Send a base64 image string to the server via websocket.
+ * @param base64Image The base64-encoded PNG string (no data: prefix)
+ */
+export function sendImageData(base64Image: string) {
+    if (isSocketOpen()) {
+        socket.send(base64Image);
+    } else {
+        console.warn('WebSocket is not open. Cannot send image data.');
+    }
+}
 import LoadingModal from '@/components/modals/templates/LoadingModal.vue';
 import { useGameStateStore } from '@/store/game-state-store';
 import { applyPatch } from 'fast-json-patch';
 import ModalController from './modal-controller';
 
 let socket: WebSocket;
-let address: string;
 
 export type SocketMessageType = 'patch';
 
@@ -65,10 +75,6 @@ async function onMessage(message: any) {
         useGameStateStore().model = applyPatch(useGameStateStore().model, [
             socketMessage.data
         ]).newDocument;
-
-        console.log(
-            JSON.stringify(useGameStateStore().model.secondsRemainingInPhase)
-        );
     } catch (error) {
         console.error('Error parsing socket message:', error);
     }

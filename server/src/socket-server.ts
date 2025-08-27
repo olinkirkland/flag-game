@@ -74,6 +74,22 @@ export default class SocketServer {
                 path: `/players/${playerId}`
             });
         });
+
+        client.on('message', (data) => {
+            // Only accept imageData from the artist
+            const playerId = this.playerIdsBySocket.get(client);
+            if (!playerId) return;
+            // Get current artist from game state
+            const { gameState } = require('./game');
+            if (gameState.artist !== playerId) return;
+            // Data is expected to be a base64 string
+            const base64 = typeof data === 'string' ? data : data.toString();
+            patch({
+                op: 'replace',
+                path: '/imageData',
+                value: base64
+            });
+        });
     }
 
     async broadcast(message: SocketMessage) {

@@ -1,90 +1,115 @@
 <template>
     <div class="play-page">
-        <Button @click="onClickDeleteAllUsers">Delete all Users</Button>
-        <Button @click="onClickFetchGameState">Fetch Game State</Button>
+        <!-- Phase: setup -->
+        <Panel v-if="phase === 'setup'" class="setup">
+            <h1>Round {{ round }} will begin in {{ secondsRemaining }}...</h1>
+            <h1>
+                The artist is <strong>{{ artist }}</strong>
+            </h1>
+        </Panel>
 
-        <div class="flex">
-            <InputGroup
-                v-model="guess"
-                placeholder="e.g., France, Germany, etc."
-                >Guess</InputGroup
-            >
-            <Button @click="onClickSubmitGuess">Submit</Button>
-        </div>
-
-        <Panel>
-            <h1>{{ currentPhase }}</h1>
-            <p>{{ secondsRemainingInPhase }} seconds left</p>
-            <p>Round: {{ round }}</p>
-            <p>Artist: {{ artist }}</p>
-            <p>Current Country: {{ currentCountry }}</p>
-            <Panel border-mode>
-                <div class="swatches">
-                    <div
-                        v-for="color in currentColors"
-                        class="swatch"
-                        :style="{ backgroundColor: color }"
-                        :key="color"
-                    ></div>
-                </div>
+        <!-- Phase: play -->
+        <Panel v-if="phase === 'play'" class="play">
+            <Panel v-if="artist === myId">
+                <h1>
+                    You are the artist! Draw the flag of
+                    <strong>{{ countryName }}</strong
+                    >.
+                </h1>
+                <DrawableCanvas
+                    :colors="colors"
+                    @change="onChangeImageData"
+                    class="canvas-area"
+                />
             </Panel>
-            <Panel border-mode>
-                <h3>Players</h3>
-                <ul class="player-list">
-                    <li v-for="player in players" :key="player">
-                        {{ player }}
-                    </li>
-                </ul>
+
+            <Panel v-else>
+                <h1>You are guessing! What flag is being drawn?</h1>
+                <div class="guess-input">
+                    <input
+                        v-model="guess"
+                        placeholder="e.g., France, Germany,
+                    etc."
+                    />
+                    <Button @click="onClickSubmitGuess" class="accent-1"
+                        >Guess!</Button
+                    >
+                </div>
+                <UndrawableCanvas
+                    :imageData="gameState.model.imageData"
+                    class="canvas-area"
+                />
             </Panel>
         </Panel>
+
+        <!-- Phase: results -->
+        <Panel v-if="phase === 'results'" class="results">
+            <div v-if="phase === 'results'">
+                <h1>Round Over!</h1>
+                <h1>
+                    The flag was <strong>{{ countryName }}</strong
+                    >!
+                </h1>
+                <img
+                    :src="'flags/' + countryCode + '.png'"
+                    :alt="`Flag of ${countryName}`"
+                />
+            </div>
+
+            <Panel border-mode>
+                <h1>Round {{ round }}: {{ phase }}</h1>
+                <p>{{ secondsRemaining }} seconds left</p>
+                <p>Artist: {{ artist }}</p>
+            </Panel>
+        </Panel>
+    </div>
+
+    <!-- Player list -->
+    <div class="players">
+        <ul>
+            <li v-for="player in players" :key="player">
+                {{ player }}
+            </li>
+        </ul>
     </div>
 </template>
 
 <script lang="ts" setup>
+import DrawableCanvas from '@/components/DrawableCanvas.vue';
+import UndrawableCanvas from '@/components/UndrawableCanvas.vue';
+import { getUserId } from '@/controllers/data-controller';
 import { useGameStateStore } from '@/store/game-state-store';
-import GameState from '@shared/game-state-model';
 import axios from 'axios';
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const guess = ref('');
+const myId = ref(getUserId());
 
 const gameState = useGameStateStore();
-const currentPhase = computed(() => gameState.model.currentPhase || null);
-const secondsRemainingInPhase = computed(
-    () => gameState.model.secondsRemainingInPhase || 0
-);
+const phase = computed(() => gameState.model.phase || null);
+const secondsRemaining = computed(() => gameState.model.secondsRemaining || 0);
 const players = computed(() => gameState.model.players || []);
 const artist = computed(() => gameState.model.artist || null);
-const currentColors = computed(() => gameState.model.currentColors || []);
-const currentCountry = computed(() => gameState.model.currentCountry || null);
+const colors = computed(() => gameState.model.colors || []);
+const countryName = computed(() => gameState.model.countryName || null);
+const countryCode = computed(() => gameState.model.countryCode || null);
 const round = computed(() => gameState.model.round || 1);
 
-function onClickDeleteAllUsers() {
-    axios
-        .delete('user/clear')
-        .then(() => {
-            console.log('All users deleted successfully');
-        })
-        .catch((error) => {
-            console.error('Error deleting users:', error);
-        });
-}
+// Clear guess input when phase changes
+watch(phase, () => {
+    guess.value = '';
+});
 
-function onClickFetchGameState() {
-    useGameStateStore().fetchGameState();
+function onChangeImageData(imageData: string) {
+    gameState.updateImageData(imageData);
 }
 
 function onClickSubmitGuess() {
-    if (!guess.value) {
-        alert('Please enter a guess.');
-        return;
-    }
-
+    guess.value = '';
     axios
         .post('game/guess', { guess: guess.value })
         .then((response) => {
             console.log('Guess submitted successfully:', response.data);
-            guess.value = '';
         })
         .catch((error) => {
             console.error('Error submitting guess:', error);
@@ -97,38 +122,64 @@ function onClickSubmitGuess() {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    padding: 2rem;
     height: 100%;
     overflow-y: auto;
+    padding: 4rem;
 }
 
-.swatches {
+.guess-input {
+    margin: 0 auto;
     display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.swatch {
-    width: 3.2rem;
-    height: 3.2rem;
-    display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
-    border-radius: 100%;
-    border: 2px solid var(--border);
-    box-shadow: var(--shadow-sm);
-    > i {
-        color: var(--border);
-        font-size: 1.6rem;
+    gap: 1rem;
+    input {
+        height: 3.6rem;
+        border-bottom: 0.2rem solid var(--accent-1);
+        font-size: 2rem;
+        max-width: unset;
+        width: auto;
     }
 }
 
-ul.player-list {
+.players {
     display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    li {
-        border-radius: 5px;
+    justify-content: center;
+    border-top: 2px solid var(--surface-dark);
+    padding: 1rem;
+    position: absolute;
+    width: 100%;
+    bottom: 0;
+
+    ul {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        li {
+            border-radius: 5px;
+        }
+    }
+}
+
+.results {
+    width: 100%;
+    img {
+        width: 100%;
+        max-width: 40rem;
+        object-fit: contain;
+    }
+}
+
+.canvas-area {
+    width: 100%;
+    max-width: 64rem;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 2rem;
+    border: 2px solid var(--accent-1);
+    :deep(canvas) {
+        border: none !important;
     }
 }
 </style>

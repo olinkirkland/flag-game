@@ -7,6 +7,10 @@ import {
 } from './game-helpers';
 import SocketServer from './socket-server';
 
+const SECONDS_IN_SETUP_PHASE = 5;
+const SECONDS_IN_PLAY_PHASE = 10;
+const SECONDS_IN_RESULTS_PHASE = 5;
+
 let gameLoopInterval: NodeJS.Timeout | null = null;
 
 export const Phase = {
@@ -19,10 +23,12 @@ export let gameState: GameState = {
     round: 1,
     players: [],
     artist: null, // Initially no artist
-    currentCountry: null,
-    currentColors: [],
-    currentPhase: Phase.SETUP,
-    secondsRemainingInPhase: 0
+    countryCode: null,
+    countryName: null,
+    colors: [],
+    phase: Phase.SETUP,
+    secondsRemaining: 0,
+    imageData: null // Initially no image data
 };
 
 export function patch(patch: Operation) {
@@ -48,28 +54,29 @@ export function startGameLoop() {
 
     const intervalMillis = 1000;
     gameLoopInterval = setInterval(() => {
-        if (gameState.secondsRemainingInPhase > 0) {
-            const newSecondsRemainingInPhase =
-                gameState.secondsRemainingInPhase - intervalMillis / 1000;
+        if (gameState.secondsRemaining > 0) {
+            const nextSecondsRemaining =
+                gameState.secondsRemaining - intervalMillis / 1000;
             patch({
                 op: 'replace',
-                path: '/secondsRemainingInPhase',
-                value: Number(newSecondsRemainingInPhase.toFixed(3))
+                path: '/secondsRemaining',
+                value: Number(nextSecondsRemaining.toFixed(3))
             });
         } else advancePhase();
     }, intervalMillis);
 }
 
 export async function startSetupPhase() {
+    const countryCode = getRandomCountry();
     const country = getRandomCountry();
-    const countryColors = getColorsForCountry(country);
+    const countryColors = getColorsForCountry(country.code);
     const colors = getRandomColors(countryColors);
 
-    // Seconds remaining in setup phase
+    // Set the timer for the setup phase
     patch({
         op: 'replace',
-        path: '/secondsRemainingInPhase',
-        value: 5
+        path: '/secondsRemaining',
+        value: SECONDS_IN_SETUP_PHASE
     });
 
     // Increment the round number
@@ -82,7 +89,7 @@ export async function startSetupPhase() {
     // Set the current phase to setup
     patch({
         op: 'replace',
-        path: '/currentPhase',
+        path: '/phase',
         value: Phase.SETUP
     });
 
@@ -92,19 +99,37 @@ export async function startSetupPhase() {
         path: '/artist',
         value: chooseArtist()
     });
+
+    // Update the country and colors for the new round
     patch({
         op: 'replace',
-        path: '/currentColors',
+        path: '/colors',
         value: colors
     });
+
+    // Update country name
     patch({
         op: 'replace',
-        path: '/currentCountry',
-        value: country
+        path: '/countryName',
+        value: country.name
+    });
+
+    // Update country code
+    patch({
+        op: 'replace',
+        path: '/countryCode',
+        value: country.code
+    });
+
+    // Clear any existing image data
+    patch({
+        op: 'replace',
+        path: '/imageData',
+        value: null
     });
 
     console.log('👉', 'Setup phase: Players can prepare for the round.');
-    console.log('  ', `Current country: ${country}`);
+    console.log('  ', `Current country: ${country.name} (${country.code})`);
     console.log('  ', `Available colors: ${colors.join(', ')}`);
 }
 
@@ -112,13 +137,15 @@ function startPlayPhase() {
     // Change the game state to the play phase
     patch({
         op: 'replace',
-        path: '/currentPhase',
+        path: '/phase',
         value: Phase.PLAY
     });
+
+    // Set the timer for the play phase
     patch({
         op: 'replace',
-        path: '/secondsRemainingInPhase',
-        value: 10
+        path: '/secondsRemaining',
+        value: SECONDS_IN_PLAY_PHASE
     });
 
     console.log('👉', 'Play phase: Players can submit their guesses.');
@@ -128,32 +155,29 @@ function startResultsPhase() {
     // Change the game state to the results phase
     patch({
         op: 'replace',
-        path: '/currentPhase',
+        path: '/phase',
         value: Phase.RESULTS
     });
+
+    // Set the timer for the results phase
     patch({
         op: 'replace',
-        path: '/secondsRemainingInPhase',
-        value: 5
+        path: '/secondsRemaining',
+        value: SECONDS_IN_RESULTS_PHASE
     });
 
     console.log('👉', 'Results phase: Players see the results of the round.');
 }
 
 function advancePhase() {
-    if (gameState.currentPhase === Phase.SETUP) startPlayPhase();
-    else if (gameState.currentPhase === Phase.PLAY) startResultsPhase();
-    else if (gameState.currentPhase === Phase.RESULTS) startSetupPhase();
+    if (gameState.phase === Phase.SETUP) startPlayPhase();
+    else if (gameState.phase === Phase.PLAY) startResultsPhase();
+    else if (gameState.phase === Phase.RESULTS) startSetupPhase();
 }
 
 function chooseArtist() {
     const { players } = gameState;
     if (players.length === 0) return null;
-
-    const currentArtistIndex = players.findIndex(
-        (player) => player === gameState.artist
-    );
-
-    const nextArtistIndex = Math.round(Math.random() * players.length);
-    return players[nextArtistIndex];
+    const randomIndex = Math.floor(Math.random() * players.length);
+    return players[randomIndex];
 }

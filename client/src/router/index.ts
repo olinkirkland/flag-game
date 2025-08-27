@@ -1,11 +1,11 @@
 import LoadingModal from '@/components/modals/templates/LoadingModal.vue';
 import { getUserId, setUserId } from '@/controllers/data-controller';
 import ModalController from '@/controllers/modal-controller';
+import { connectToSocket } from '@/controllers/websocket-controller';
+import { useGameStateStore } from '@/store/game-state-store';
 import axios from 'axios';
 import { type RouterOptions, createRouter, createWebHistory } from 'vue-router';
 import PlayPage from '../pages/PlayPage.vue';
-import { connectToSocket } from '@/controllers/websocket-controller';
-import { useGameStateStore } from '@/store/game-state-store';
 
 export const PageName = {
     PLAY: 'play'

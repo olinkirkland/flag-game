@@ -44,7 +44,6 @@ button {
     padding: 0 1rem;
     color: var(--body);
     cursor: pointer;
-    border-radius: 5px;
     border-bottom: 2px solid transparent;
     transition: all 0.1s;
     white-space: nowrap;
@@ -60,7 +59,6 @@ button {
     left: 0;
     width: 100%;
     height: 100%;
-    border-radius: 5px;
 }
 
 button:hover {
@@ -102,7 +100,7 @@ button:active ~ .button-shadow {
 .button-container.accent-1 {
     button {
         background-color: var(--accent-1);
-        color: var(--body);
+        color: var(--surface);
     }
     .button-shadow {
         background-color: var(--accent-1-dark);

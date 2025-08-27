@@ -1,6 +1,8 @@
+import countries from '../assets/countries.json';
+
 export function getRandomCountry() {
-    // TODO: Implement logic to get a random country
-    return 'us';
+    const country = countries[Math.floor(Math.random() * countries.length)];
+    return country;
 }
 
 export function getColorsForCountry(country: string): string[] {
