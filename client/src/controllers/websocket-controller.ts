@@ -23,14 +23,16 @@ export function isSocketOpen() {
     return socket && socket.readyState === WebSocket.OPEN;
 }
 
-export async function connectToSocket() {
+export async function connectToSocket(playerId: string) {
     destroyConnection();
 
     // Is 'localhost' in the hostname?
     const isLocalhost = window.location.hostname.includes('localhost');
-    const address = isLocalhost
+    const baseAddress = isLocalhost
         ? 'ws://localhost:3002'
         : 'ws://flag-game-production.up.railway.app:3002';
+    // Pass playerId as a query parameter
+    const address = `${baseAddress}?id=${encodeURIComponent(playerId)}`;
 
     try {
         socket = new WebSocket(address);
@@ -59,7 +61,7 @@ async function onMessage(message: any) {
     try {
         const data = JSON.parse(message.data);
         const socketMessage = data as SocketMessage;
-        console.log('Applying patch:', socketMessage.data);
+        // console.log('Applying patch:', socketMessage.data);
         useGameStateStore().model = applyPatch(useGameStateStore().model, [
             socketMessage.data
         ]).newDocument;

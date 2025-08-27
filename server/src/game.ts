@@ -49,7 +49,6 @@ export function startGameLoop() {
     const intervalMillis = 1000;
     gameLoopInterval = setInterval(() => {
         if (gameState.secondsRemainingInPhase > 0) {
-
             const newSecondsRemainingInPhase =
                 gameState.secondsRemainingInPhase - intervalMillis / 1000;
             patch({
@@ -62,40 +61,36 @@ export function startGameLoop() {
 }
 
 export async function startSetupPhase() {
-    // 1. Determine list of participating players
-    const playerIds = await getConnectedPlayerIds();
-
-    // 2. Fetch the round data
     const country = getRandomCountry();
     const countryColors = getColorsForCountry(country);
     const colors = getRandomColors(countryColors);
 
-    // 3. Change the game state for the round
+    // Seconds remaining in setup phase
     patch({
         op: 'replace',
         path: '/secondsRemainingInPhase',
         value: 5
     });
 
+    // Increment the round number
     patch({
         op: 'replace',
         path: '/round',
         value: gameState.round + 1
     });
+
+    // Set the current phase to setup
     patch({
         op: 'replace',
         path: '/currentPhase',
         value: Phase.SETUP
     });
-    patch({
-        op: 'replace',
-        path: '/players',
-        value: playerIds
-    });
+
+    // Choose an artist randomly from the list of players
     patch({
         op: 'replace',
         path: '/artist',
-        value: playerIds[Math.floor(Math.random() * playerIds.length)]
+        value: chooseArtist()
     });
     patch({
         op: 'replace',
@@ -111,7 +106,6 @@ export async function startSetupPhase() {
     console.log('👉', 'Setup phase: Players can prepare for the round.');
     console.log('  ', `Current country: ${country}`);
     console.log('  ', `Available colors: ${colors.join(', ')}`);
-    console.log('  ', `Players: ${playerIds.join(', ')}`);
 }
 
 function startPlayPhase() {
@@ -146,14 +140,20 @@ function startResultsPhase() {
     console.log('👉', 'Results phase: Players see the results of the round.');
 }
 
-async function getConnectedPlayerIds() {
-    // TODO: Implement logic to fetch connected player IDs
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    return ['player1', 'player2', 'player3']; // Example player IDs, should be replaced with actual logic to fetch connected players
-}
-
 function advancePhase() {
     if (gameState.currentPhase === Phase.SETUP) startPlayPhase();
     else if (gameState.currentPhase === Phase.PLAY) startResultsPhase();
     else if (gameState.currentPhase === Phase.RESULTS) startSetupPhase();
+}
+
+function chooseArtist() {
+    const { players } = gameState;
+    if (players.length === 0) return null;
+
+    const currentArtistIndex = players.findIndex(
+        (player) => player === gameState.artist
+    );
+
+    const nextArtistIndex = Math.round(Math.random() * players.length);
+    return players[nextArtistIndex];
 }

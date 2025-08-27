@@ -51,8 +51,7 @@ router.beforeEach(async (to, from, next) => {
 
     setUserId(user.id);
     await useGameStateStore().fetchGameState();
-
-    await connectToSocket();
+    await connectToSocket(user.id);
 
     console.log('Navigating to:', to.name);
     ModalController.close();
