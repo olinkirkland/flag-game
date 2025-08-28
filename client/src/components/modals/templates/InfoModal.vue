@@ -10,7 +10,7 @@
                 <div class="info__content" v-html="props.message"></div>
                 <div class="choices">
                     <Button class="btn" @click="ModalController.close()">
-                        <span>{{ props.confirmText || t('Modals.Confirm.Controls.confirm') }}</span>
+                        <span>{{ props.confirmText || 'OK' }}</span>
                     </Button>
                 </div>
             </div>
@@ -22,7 +22,6 @@
 import ModalFrame from '@/components/modals/ModalFrame.vue';
 import ModalHeader from '@/components/modals/ModalHeader.vue';
 import ModalController from '@/controllers/modal-controller';
-import { t } from '@/i18n/locale';
 
 const props = defineProps<{
     title: string;
