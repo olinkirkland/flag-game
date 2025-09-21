@@ -18,6 +18,7 @@
                 </h1>
                 <DrawableCanvas
                     :colors="colors"
+                    :background-src="grayscaleSrc"
                     @change="onChangeImageData"
                     class="canvas-area"
                 />
@@ -94,6 +95,13 @@ const colors = computed(() => gameState.model.colors || []);
 const countryName = computed(() => gameState.model.countryName || null);
 const countryCode = computed(() => gameState.model.countryCode || null);
 const round = computed(() => gameState.model.round || 1);
+
+const grayscaleSrc = computed<string | undefined>(() => {
+    const code = countryCode.value;
+    if (!code) return undefined;
+    // public/flags_grayscale is served from the root under /flags_grayscale
+    return `/flags_grayscale/${code}.png`;
+});
 
 // Clear guess input when phase changes
 watch(phase, () => {

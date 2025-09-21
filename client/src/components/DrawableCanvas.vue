@@ -1,13 +1,21 @@
 <template>
     <div class="drawable-canvas-wrapper">
-        <canvas
-            ref="canvas"
-            class="drawable-canvas"
-            @mousedown="startDraw"
-            @mousemove="draw"
-            @mouseup="endDraw"
-            @mouseleave="endDraw"
-        ></canvas>
+        <div class="canvas-stack">
+            <img
+                v-if="backgroundSrc"
+                :src="backgroundSrc"
+                class="canvas-background"
+                alt="background"
+            />
+            <canvas
+                ref="canvas"
+                class="drawable-canvas"
+                @mousedown="startDraw"
+                @mousemove="draw"
+                @mouseup="endDraw"
+                @mouseleave="endDraw"
+            ></canvas>
+        </div>
         <div class="swatches">
             <div
                 v-for="color in colors"
@@ -29,6 +37,7 @@ const CANVAS_HEIGHT = 600;
 
 const props = defineProps<{
     colors: string[];
+    backgroundSrc?: string;
 }>();
 const emit = defineEmits(['change']);
 
@@ -96,6 +105,9 @@ onMounted(() => {
     window.addEventListener('resize', resizeCanvas);
 });
 
+// Watch for background image load (optional): when background changes we
+// could ensure canvas stays transparent. The <img> is purely decorative.
+
 function resizeCanvas() {
     const c = canvas.value!;
     const parent = c.parentElement!;
@@ -120,7 +132,7 @@ function resizeCanvas() {
 .drawable-canvas {
     width: 100%;
     max-width: 100vw;
-    background: #fff;
+    background: transparent;
     border: 2px solid var(--border);
     box-shadow: var(--shadow-sm);
     display: block;
@@ -149,5 +161,24 @@ function resizeCanvas() {
 .swatch.selected {
     border: 2px solid var(--primary, #007bff);
     box-shadow: 0 0 0 2px var(--primary, #007bff);
+}
+
+.canvas-stack {
+    position: relative;
+}
+
+.canvas-background {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    user-select: none;
+    opacity: 0.5;
+    z-index: 0;
+}
+
+.drawable-canvas {
+    position: relative;
+    z-index: 1;
 }
 </style>
