@@ -13,7 +13,7 @@ export default defineConfig({
     resolve: {
         alias: {
             '@': new URL('./src', import.meta.url).pathname,
-            '@shared': new URL('../shared/src', import.meta.url).pathname
+            '@shared': new URL('../shared', import.meta.url).pathname
         }
     }
 });
