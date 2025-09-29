@@ -6,6 +6,7 @@
     "type": "commonjs",
     "scripts": {
         "dev": "nodemon --exec ts-node -r tsconfig-paths/register src/index.ts",
+        "prebuild": "tsc --project ./tsconfig.json --traceResolution src/game.ts || true",
         "build": "tsc --project ./tsconfig.json && tsc-alias",
         "start": "node -r tsconfig-paths/register dist/server/src/index.js"
     },
