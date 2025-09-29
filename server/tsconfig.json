@@ -13,5 +13,9 @@
         },
         "types": ["jest"]
     },
-    "include": ["src/**/*.ts", "src/parsers/definitions.ts", "../shared/**/*.ts"]
+    "include": [
+        "src/**/*.ts",
+        "src/parsers/definitions.ts",
+        "../shared/**/*.ts"
+    ]
 }
