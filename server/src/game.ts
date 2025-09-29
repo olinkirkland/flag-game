@@ -1,4 +1,4 @@
-import GameState from '@shared/game-state-model';
+import type GameState from '@shared/game-state-model';
 import { applyPatch, Operation } from 'fast-json-patch';
 import {
     getColorsForCountry,
