@@ -12,8 +12,7 @@ export default defineConfig({
     base: process.env.NODE_ENV === 'development' ? '/' : '/flag-game/',
     resolve: {
         alias: {
-            '@': new URL('./src', import.meta.url).pathname,
-            '@shared': new URL('../shared', import.meta.url).pathname
+            '@': new URL('./src', import.meta.url).pathname
         }
     }
 });

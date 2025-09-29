@@ -13,16 +13,10 @@
         "skipLibCheck": true,
         "noEmit": true,
         "paths": {
-            "@/*": ["./src/*"],
-            "@shared/*": ["../shared/*"]
+            "@/*": ["./src/*"]
         },
         /* Misc */
         "strictPropertyInitialization": false
     },
-    "include": [
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.vue",
-        "../shared/**/*.ts"
-    ]
+    "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
 }
