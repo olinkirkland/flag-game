@@ -15,7 +15,7 @@ export function createServer() {
 
     app.use('/api/user', userRouter);
     app.use('/api/game', gameRouter);
-    const PORT = process.env.PORT || 3001;
+    const PORT = Number(process.env.PORT) || 3000;
     app.listen(PORT, () => {
         console.log(`Server listening on port ${PORT}`);
     });
