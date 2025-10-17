@@ -8,7 +8,7 @@ import io from 'socket.io-client';
 const isLocalhost = window.location.hostname.includes('localhost');
 const baseAddress = isLocalhost
     ? 'http://localhost:3001'
-    : 'http://flag-game-production.up.railway.app:3001';
+    : 'https://flag-game-production.up.railway.app:3001';
 const socket = io(baseAddress, { autoConnect: false });
 
 export function connectToSocket(playerId: string) {
