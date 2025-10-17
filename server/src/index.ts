@@ -22,8 +22,13 @@ async function main() {
         throw error;
     }
 
+    // TODO: Clean this part up, consolidate and use better naming conventions
     const app = createServer();
-    await SocketServer.getInstance().start();
+    const server = await SocketServer.getInstance().start(app);
+    const PORT = Number(process.env.PORT) || 3000;
+    server.listen(PORT, () => {
+        console.log(`Server listening on port ${PORT}`);
+    });
 
     startGameLoop();
 }

@@ -1,22 +1,14 @@
-import { Server, WebSocket } from 'ws';
+import { Server } from 'socket.io';
 import { patch } from './game';
-
-export type SocketMessageType = 'patch';
-
-export interface SocketMessage {
-    type: SocketMessageType;
-    data?: any;
-}
+import { Express } from 'express';
+import { createServer } from 'http';
 
 export default class SocketServer {
-    private static instance: SocketServer | null;
-    private webSocketServer: Server | null;
-    private streamListeners: Set<WebSocket>;
-    private playerIdsBySocket: Map<WebSocket, string>;
+    private static instance: SocketServer | null = null;
+    private io: Server | null = null;
+    private playerIdsBySocket: Map<string, string>;
 
     private constructor() {
-        this.webSocketServer = null;
-        this.streamListeners = new Set();
         this.playerIdsBySocket = new Map();
     }
 
@@ -25,76 +17,53 @@ export default class SocketServer {
         return SocketServer.instance;
     }
 
-    async start() {
-        this.webSocketServer = new Server({
-            port: Number(process.env.SOCKET_PORT)
-        });
-
-        this.webSocketServer.on('connection', (client, req) => {
-            // Extract playerId from query string
-            let playerId: string | null = null;
-            try {
-                const url = new URL(req.url || '', `ws://${req.headers.host}`);
-                playerId = url.searchParams.get('id');
-            } catch (e) {
-                playerId = null;
+    async start(app: Express) {
+        const server = createServer(app);
+        this.io = new Server(server, {
+            cors: {
+                origin: '*',
+                methods: ['GET', 'POST', 'PUT', 'DELETE']
             }
-
-            if (!playerId) {
-                // fallback: generate a random one if not provided (should not happen)
-                playerId = Math.random().toString(36).substring(2, 15);
-            }
-
-            this.handleClientConnection(client);
-            this.playerIdsBySocket.set(client, playerId);
-            patch({
-                op: 'add',
-                path: '/players/-',
-                value: playerId
-            });
         });
 
-        return new Promise<void>((resolve) => {
-            this.webSocketServer?.on('listening', () => {
-                const port = process.env.SOCKET_PORT || '3002';
-                console.log('Socket server listening on port', port);
-                resolve();
-            });
+        this.io.on('connection', (socket) => {
+            console.log('User connected, Socket id:', socket.id);
+
+            const playerId =
+                (socket.handshake.auth.playerId as string) ||
+                Math.random().toString(36).substring(2, 15);
+
+            if (socket.handshake.auth.playerId)
+                console.log('   Received playerId:', playerId);
+            else console.log('   No playerId, generating a new one:', playerId);
+
+            this.playerIdsBySocket.set(socket.id, playerId);
+            patch({ op: 'add', path: '/players/-', value: playerId });
+            this.handleClientEvents(socket, playerId);
         });
+
+        console.log('Socket.IO server started');
+
+        return server;
     }
 
-    private handleClientConnection(client: WebSocket) {
-        client.on('close', () => {
-            this.streamListeners.delete(client);
-            const playerId = this.playerIdsBySocket.get(client);
-            if (!playerId) return;
-            this.playerIdsBySocket.delete(client);
-            patch({
-                op: 'remove',
-                path: `/players/${playerId}`
-            });
+    /**
+     * Handle the disconnect and imageData events from a connected socket (player)
+     */
+    private handleClientEvents(socket: any, playerId: string) {
+        socket.on('disconnect', () => {
+            this.playerIdsBySocket.delete(socket.id);
+            patch({ op: 'remove', path: `/players/${playerId}` });
         });
 
-        client.on('message', (data) => {
-            // Only accept imageData from the artist
-            const playerId = this.playerIdsBySocket.get(client);
-            if (!playerId) return;
-            // Get current artist from game state
+        socket.on('imageData', (base64: string) => {
             const { gameState } = require('./game');
             if (gameState.artist !== playerId) return;
-            // Data is expected to be a base64 string
-            const base64 = typeof data === 'string' ? data : data.toString();
-            patch({
-                op: 'replace',
-                path: '/imageData',
-                value: base64
-            });
+            patch({ op: 'replace', path: '/imageData', value: base64 });
         });
     }
 
-    async broadcast(message: SocketMessage) {
-        this.webSocketServer?.clients?.forEach((client) => {
-            client.send(JSON.stringify(message));
-        });
+    async broadcast(message: { type: string; data: any }) {
+        this.io?.emit(message.type, message.data);
     }
 }
